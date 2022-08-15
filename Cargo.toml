@@ -1,0 +1,11 @@
+[package]
+name = "bolt-libelf"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "elf"
+path = "src/lib.rs"
+
+[dependencies]
+bitflags = "1.3"

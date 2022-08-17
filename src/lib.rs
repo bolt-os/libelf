@@ -34,7 +34,6 @@
 //!
 //! [this draft]: https://refspecs.linuxfoundation.org/elf/gabi4+/contents.html
 
-#![feature(const_align_offset)]
 #![no_std]
 
 mod dynamic;
@@ -130,7 +129,7 @@ pub struct Elf<'elf> {
 }
 
 impl Elf<'_> {
-    pub const fn new(data: &[u8]) -> Result<Elf<'_>, &'static str> {
+    pub fn new(data: &[u8]) -> Result<Elf<'_>, &'static str> {
         if !FileHeader::check_buffer(data) {
             return Err("invalid ELF");
         }
@@ -365,7 +364,7 @@ impl FileHeader {
         self.shdr_offset as _
     }
 
-    pub const fn check_buffer(buf: &[u8]) -> bool {
+    pub fn check_buffer(buf: &[u8]) -> bool {
         buf.as_ptr().align_offset(core::mem::align_of::<Self>()) == 0
             && buf.len() >= core::mem::size_of::<Self>()
             && buf[0] == 0x7f
@@ -374,7 +373,7 @@ impl FileHeader {
             && buf[3] == b'F'
     }
 
-    pub const fn from_buffer(buf: &[u8]) -> &FileHeader {
+    pub fn from_buffer(buf: &[u8]) -> &FileHeader {
         assert!(Self::check_buffer(buf));
 
         unsafe { &*buf.as_ptr().cast() }

@@ -201,7 +201,7 @@ impl Elf<'_> {
     pub fn symbol_table(&self) -> Option<SymbolTable<'_>> {
         let shdr = self
             .sections()
-            .find(|shdr| shdr.name() == Some(".strtab"))?;
+            .find(|shdr| shdr.name() == Some(".symtab"))?;
 
         Some(SymbolTable::new(
             self,

@@ -262,6 +262,11 @@ impl Elf<'_> {
         self.sections().nth(index as _)
     }
 
+    /// Returns the section with the given `name`, or `None` if one can't be found.
+    pub fn find_section(&self, name: &str) -> Option<Section<'_>> {
+        self.sections().find(|sect| sect.name() == Some(name))
+    }
+
     pub fn dynamic_table(&self) -> Option<DynamicTable<'_>> {
         self.segments()
             .find(|sgmt| sgmt.kind() == SegmentKind::Dynamic)

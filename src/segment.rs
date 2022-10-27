@@ -41,11 +41,9 @@ impl<'elf> Segment<'elf> {
     pub(crate) fn new(elf: &'elf Elf<'elf>, hdr: &'elf ProgramHeader) -> Segment<'elf> {
         Self { elf, hdr }
     }
-}
 
-impl Segment<'_> {
     #[inline]
-    pub fn file_data(&self) -> &[u8] {
+    pub fn file_data(&self) -> &'elf [u8] {
         &self.elf.data[self.file_offset()..][..self.file_size()]
     }
 }

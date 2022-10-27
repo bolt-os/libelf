@@ -37,12 +37,14 @@ pub struct Segment<'elf> {
 }
 
 impl<'elf> Segment<'elf> {
+    #[inline]
     pub(crate) fn new(elf: &'elf Elf<'elf>, hdr: &'elf ProgramHeader) -> Segment<'elf> {
         Self { elf, hdr }
     }
 }
 
 impl Segment<'_> {
+    #[inline]
     pub fn file_data(&self) -> &[u8] {
         &self.elf.data[self.file_offset()..][..self.file_size()]
     }
@@ -95,30 +97,37 @@ pub struct ProgramHeader {
 assert_struct_size!(ProgramHeader, 56);
 
 impl ProgramHeader {
+    #[inline]
     pub const fn kind(&self) -> SegmentKind {
         SegmentKind::from_u32(self.kind)
     }
 
+    #[inline]
     pub const fn flags(&self) -> SegmentFlags {
         self.flags
     }
 
+    #[inline]
     pub const fn file_offset(&self) -> usize {
         self.file_offset as _
     }
 
+    #[inline]
     pub const fn file_size(&self) -> usize {
         self.file_size as _
     }
 
+    #[inline]
     pub const fn mem_size(&self) -> usize {
         self.mem_size as _
     }
 
+    #[inline]
     pub const fn virtual_address(&self) -> u64 {
         self.vaddr
     }
 
+    #[inline]
     pub const fn physical_address(&self) -> u64 {
         self.paddr
     }

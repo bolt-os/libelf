@@ -45,10 +45,12 @@ pub struct Section<'elf> {
 }
 
 impl<'elf> Section<'elf> {
+    #[inline]
     pub(crate) fn new(elf: &'elf Elf<'elf>, hdr: &'elf SectionHeader) -> Section<'elf> {
         Self { elf, hdr }
     }
 
+    #[inline]
     pub fn file_data(&self) -> &'elf [u8] {
         &self.elf.data[self.file_offset()..][..self.size()]
     }
@@ -86,6 +88,7 @@ impl fmt::Debug for Section<'_> {
 impl core::ops::Deref for Section<'_> {
     type Target = SectionHeader;
 
+    #[inline]
     fn deref(&self) -> &Self::Target {
         self.hdr
     }
@@ -108,30 +111,37 @@ pub struct SectionHeader {
 assert_struct_size!(SectionHeader, 64);
 
 impl SectionHeader {
+    #[inline]
     pub const fn name_index(&self) -> u32 {
         self.name_index
     }
 
+    #[inline]
     pub const fn section_type(&self) -> SectionType {
         SectionType::from_u32(self.section_type)
     }
 
+    #[inline]
     pub const fn flags(&self) -> SectionFlags {
         SectionFlags { bits: self.flags }
     }
 
+    #[inline]
     pub const fn addr(&self) -> u64 {
         self.addr
     }
 
+    #[inline]
     pub const fn file_offset(&self) -> usize {
         self.offset as _
     }
 
+    #[inline]
     pub const fn size(&self) -> usize {
         self.size as _
     }
 
+    #[inline]
     pub const fn entry_size(&self) -> u64 {
         self.entry_size
     }
@@ -216,42 +226,52 @@ pub struct SectionFlags {
 }
 
 impl SectionFlags {
+    #[inline]
     pub const fn write(self) -> bool {
         self.bits & 0x1 != 0
     }
 
+    #[inline]
     pub const fn alloc(self) -> bool {
         self.bits & 0x2 != 0
     }
 
+    #[inline]
     pub const fn execinstr(self) -> bool {
         self.bits & 0x4 != 0
     }
 
+    #[inline]
     pub const fn merge(self) -> bool {
         self.bits & 0x10 != 0
     }
 
+    #[inline]
     pub const fn strings(self) -> bool {
         self.bits & 0x20 != 0
     }
 
+    #[inline]
     pub const fn info_link(self) -> bool {
         self.bits & 0x40 != 0
     }
 
+    #[inline]
     pub const fn link_order(self) -> bool {
         self.bits & 0x80 != 0
     }
 
+    #[inline]
     pub const fn os_nonconforming(self) -> bool {
         self.bits & 0x100 != 0
     }
 
+    #[inline]
     pub const fn group(self) -> bool {
         self.bits & 0x200 != 0
     }
 
+    #[inline]
     pub const fn tls(self) -> bool {
         self.bits & 0x400 != 0
     }

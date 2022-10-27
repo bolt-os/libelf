@@ -39,6 +39,7 @@ pub struct SymbolTable<'elf> {
 }
 
 impl<'elf> SymbolTable<'elf> {
+    #[inline]
     pub fn new(
         elf: &'elf Elf<'elf>,
         data: &'elf [Sym],
@@ -51,6 +52,7 @@ impl<'elf> SymbolTable<'elf> {
         }
     }
 
+    #[inline]
     pub fn find<F>(&self, f: F) -> Option<Symbol<'elf>>
     where
         F: FnMut(&Symbol<'_>) -> bool,
@@ -68,10 +70,12 @@ pub struct Symbol<'elf> {
 }
 
 impl Symbol<'_> {
+    #[inline]
     pub fn name(&self) -> Option<&str> {
         self.elf.string_table()?.get_string(self.name_index())
     }
 
+    #[inline]
     pub fn section(&self) -> Option<Section<'_>> {
         self.elf.section(self.section_index)
     }
@@ -94,6 +98,7 @@ impl fmt::Debug for Symbol<'_> {
 impl core::ops::Deref for Symbol<'_> {
     type Target = Sym;
 
+    #[inline]
     fn deref(&self) -> &Self::Target {
         self.sym
     }
@@ -112,34 +117,42 @@ pub struct Sym {
 assert_struct_size!(Sym, 24);
 
 impl Sym {
+    #[inline]
     pub const fn name_index(&self) -> usize {
         self.name_index as usize
     }
 
+    #[inline]
     pub const fn binding(&self) -> Binding {
         self.info.binding()
     }
 
+    #[inline]
     pub const fn kind(&self) -> SymbolKind {
         self.info.kind()
     }
 
+    #[inline]
     pub const fn visibility(&self) -> Visibility {
         self.info.visibility()
     }
 
+    #[inline]
     pub const fn section_index(&self) -> u16 {
         self.section_index
     }
 
+    #[inline]
     pub const fn is_resolved(&self) -> bool {
         self.section_index == SHN_UNDEF
     }
 
+    #[inline]
     pub const fn is_absolute(&self) -> bool {
         self.section_index == SHN_ABS
     }
 
+    #[inline]
     pub const fn is_common(&self) -> bool {
         self.section_index == SHN_COMMON
     }
@@ -157,22 +170,27 @@ impl Sym {
     ///   To make symbols more useful for the dynamic linker, this value contains a virtual
     ///   memory address instead of a section offset. The associated section is irrelevant in
     ///   this case.
+    #[inline]
     pub const fn value(&self) -> u64 {
         self.value
     }
 
+    #[inline]
     pub const fn as_ptr<T>(&self) -> *const T {
         self.value as _
     }
 
+    #[inline]
     pub const fn as_mut_ptr<T>(&self) -> *mut T {
         self.value as _
     }
 
+    #[inline]
     pub const fn size(&self) -> u64 {
         self.size
     }
 
+    #[inline]
     pub const fn contains_addr(&self, addr: u64) -> bool {
         self.value <= addr && addr < (self.value + self.size)
     }
@@ -186,14 +204,17 @@ pub struct SymInfo {
 }
 
 impl SymInfo {
+    #[inline]
     pub const fn kind(self) -> SymbolKind {
         SymbolKind::from_sym_info(self)
     }
 
+    #[inline]
     pub const fn binding(self) -> Binding {
         Binding::from_sym_info(self)
     }
 
+    #[inline]
     pub const fn visibility(self) -> Visibility {
         Visibility::from_sym_info(self)
     }

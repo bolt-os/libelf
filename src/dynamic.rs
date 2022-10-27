@@ -51,6 +51,7 @@ impl<'elf> DynamicTable<'elf> {
         Self { _elf, data: dyntab }
     }
 
+    #[inline]
     pub fn table_raw(&self) -> &'elf [Dyn] {
         self.data
     }
@@ -66,18 +67,22 @@ pub struct Dyn {
 assert_struct_size!(Dyn, 16);
 
 impl Dyn {
+    #[inline]
     pub fn tag(&self) -> DynTag {
         self.tag.into()
     }
 
+    #[inline]
     pub fn value(&self) -> usize {
         self.value
     }
 
+    #[inline]
     pub fn as_ptr<T>(&self) -> *const T {
         self.value as *const T
     }
 
+    #[inline]
     pub fn as_mut_ptr<T>(&self) -> *mut T {
         self.value as *mut T
     }

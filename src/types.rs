@@ -44,6 +44,7 @@ impl Version {
         }
     }
 
+    #[inline]
     pub const fn from_u8(x: u8) -> Version {
         Self::from_u32(x as u32)
     }

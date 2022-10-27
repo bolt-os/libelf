@@ -77,10 +77,12 @@ pub struct StringTable<'elf> {
 }
 
 impl StringTable<'_> {
+    #[inline]
     pub const fn len(&self) -> usize {
         self.table.len()
     }
 
+    #[inline]
     pub const fn is_empty(&self) -> bool {
         self.len() == 0
     }
@@ -93,6 +95,7 @@ pub enum StrtabResult<'a> {
 }
 
 impl<'elf> StringTable<'elf> {
+    #[inline]
     pub fn new(table: &'elf [u8]) -> StringTable<'elf> {
         Self { table }
     }
@@ -150,6 +153,7 @@ impl Elf<'_> {
         Ok(Elf { data, ehdr })
     }
 
+    #[inline]
     fn get_slice(&self, offset: usize, size: usize) -> &[u8] {
         &self.data[offset..][..size]
     }
@@ -210,14 +214,17 @@ impl Elf<'_> {
         ))
     }
 
+    #[inline]
     pub fn section_header(&self, index: u32) -> Option<&SectionHeader> {
         self.section_headers().nth(index as usize)
     }
 
+    #[inline]
     pub fn sections(&self) -> impl Iterator<Item = Section<'_>> {
         self.section_headers().map(|hdr| Section::new(self, hdr))
     }
 
+    #[inline]
     pub fn segments(&self) -> impl Iterator<Item = Segment<'_>> {
         self.program_headers().map(|hdr| Segment::new(self, hdr))
     }
@@ -258,11 +265,13 @@ impl Elf<'_> {
         })
     }
 
+    #[inline]
     pub fn section(&self, index: u16) -> Option<Section<'_>> {
         self.sections().nth(index as _)
     }
 
     /// Returns the section with the given `name`, or `None` if one can't be found.
+    #[inline]
     pub fn find_section(&self, name: &str) -> Option<Section<'_>> {
         self.sections().find(|sect| sect.name() == Some(name))
     }
@@ -278,6 +287,7 @@ impl Elf<'_> {
 }
 
 impl fmt::Debug for Elf<'_> {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         <FileHeader as fmt::Debug>::fmt(self.ehdr, f)
     }
@@ -286,6 +296,7 @@ impl fmt::Debug for Elf<'_> {
 impl Deref for Elf<'_> {
     type Target = FileHeader;
 
+    #[inline]
     fn deref(&self) -> &Self::Target {
         self.ehdr
     }

@@ -35,14 +35,17 @@ use crate::assert_struct_size;
 pub struct RelocInfo(u64);
 
 impl RelocInfo {
+    #[inline]
     pub const fn new(symbol: u32, kind: RelocKind) -> RelocInfo {
         Self(((symbol as u64) << 32) | kind.0 as u64)
     }
 
+    #[inline]
     pub const fn symbol(self) -> u32 {
         (self.0 >> 32) as u32
     }
 
+    #[inline]
     pub const fn kind(self) -> RelocKind {
         RelocKind(self.0 as u32)
     }
@@ -76,10 +79,12 @@ impl core::fmt::Debug for Rela {
 }
 
 impl Rela {
+    #[inline]
     pub const fn sym(&self) -> u32 {
         self.info.symbol()
     }
 
+    #[inline]
     pub const fn kind(&self) -> RelocKind {
         self.info.kind()
     }

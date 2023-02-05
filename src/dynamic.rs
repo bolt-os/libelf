@@ -69,10 +69,10 @@ assert_struct_size!(Dyn, 16);
 impl Dyn {
     #[inline]
     pub fn tag(&self) -> DynTag {
-        self.tag.into()
+        DynTag::from_raw(self.tag)
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn value(&self) -> usize {
         self.value
     }
@@ -155,8 +155,9 @@ pub enum DynTag {
     Unknown(isize),
 }
 
-impl From<isize> for DynTag {
-    fn from(tag: isize) -> Self {
+impl DynTag {
+    #[inline]
+    pub const fn from_raw(tag: isize) -> Self {
         use DynTag::*;
 
         match tag {
@@ -200,5 +201,11 @@ impl From<isize> for DynTag {
             0x70000000..=0x7fffffff => CpuSpecific(tag),
             _ => Unknown(tag),
         }
+    }
+}
+
+impl From<isize> for DynTag {
+    fn from(tag: isize) -> Self {
+        Self::from_raw(tag)
     }
 }

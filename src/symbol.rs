@@ -69,14 +69,14 @@ pub struct Symbol<'elf> {
     sym: &'elf Sym,
 }
 
-impl Symbol<'_> {
+impl<'elf> Symbol<'elf> {
     #[inline]
-    pub fn name(&self) -> Option<&str> {
+    pub fn name(&self) -> Option<&'elf str> {
         self.elf.string_table()?.get_string(self.name_index())
     }
 
     #[inline]
-    pub fn section(&self) -> Option<Section<'_>> {
+    pub fn section(&self) -> Option<Section<'elf>> {
         self.elf.section(self.section_index)
     }
 }

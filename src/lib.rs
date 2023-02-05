@@ -131,8 +131,8 @@ pub struct Elf<'elf> {
     ehdr: &'elf FileHeader,
 }
 
-impl Elf<'_> {
-    pub fn new(data: &[u8]) -> Result<Elf<'_>, &'static str> {
+impl<'elf> Elf<'elf> {
+    pub fn new(data: &'elf [u8]) -> Result<Elf<'elf>, &'static str> {
         if !FileHeader::check_buffer(data) {
             return Err("invalid ELF");
         }
@@ -154,11 +154,11 @@ impl Elf<'_> {
     }
 
     #[inline]
-    fn get_slice(&self, offset: usize, size: usize) -> &[u8] {
+    fn get_slice(&self, offset: usize, size: usize) -> &'elf [u8] {
         &self.data[offset..][..size]
     }
 
-    unsafe fn get_slice_of<T>(&self, offset: usize, size: usize) -> &[T] {
+    unsafe fn get_slice_of<T>(&self, offset: usize, size: usize) -> &'elf [T] {
         let buf = &self.data[offset..][..size];
         let data = buf.as_ptr().cast::<T>();
         let len = size / size_of::<T>();
@@ -166,7 +166,7 @@ impl Elf<'_> {
         core::slice::from_raw_parts(data, len)
     }
 
-    pub fn section_string_table(&self) -> Option<StringTable<'_>> {
+    pub fn section_string_table(&self) -> Option<StringTable<'elf>> {
         let shdr = self.section_header(self.ehdr.shdr_strtab_index as _)?;
 
         Some(StringTable {
@@ -174,7 +174,7 @@ impl Elf<'_> {
         })
     }
 
-    pub fn string_table(&self) -> Option<StringTable<'_>> {
+    pub fn string_table(&self) -> Option<StringTable<'elf>> {
         let shdr = self
             .sections()
             .find(|shdr| shdr.name() == Some(".strtab"))?;
@@ -202,7 +202,7 @@ impl Elf<'_> {
         }))
     }
 
-    pub fn symbol_table(&self) -> Option<SymbolTable<'_>> {
+    pub fn symbol_table(&'elf self) -> Option<SymbolTable<'elf>> {
         let shdr = self
             .sections()
             .find(|shdr| shdr.name() == Some(".symtab"))?;

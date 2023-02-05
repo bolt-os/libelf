@@ -89,7 +89,7 @@ pub struct ProgramHeader {
     paddr: u64,
     file_size: u64,
     mem_size: u64,
-    alignment: u64,
+    pub alignment: u64,
 }
 
 assert_struct_size!(ProgramHeader, 56);

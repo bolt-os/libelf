@@ -55,14 +55,20 @@ impl<'elf> Section<'elf> {
         &self.elf.data[self.file_offset()..][..self.size()]
     }
 
-    pub fn table<T>(&self) -> &'elf [T] {
+    /// Returns the contents of the section as an array of some type
+    ///
+    /// # Safety
+    ///
+    /// The caller must guarantee that the section's contents represent valid
+    /// types of `T`.
+    pub unsafe fn table<T>(&self) -> &'elf [T] {
         assert_eq!(self.entry_size as usize, size_of::<T>());
         let data = self.file_data().as_ptr().cast::<T>();
         assert!(data.align_offset(align_of::<T>()) == 0);
         assert!(self.size() % size_of::<T>() == 0);
         let len = self.size() / size_of::<T>();
 
-        unsafe { core::slice::from_raw_parts(data, len) }
+        core::slice::from_raw_parts(data, len)
     }
 
     pub fn name(&self) -> Option<&'elf str> {

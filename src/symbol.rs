@@ -53,9 +53,9 @@ impl<'elf> SymbolTable<'elf> {
     }
 
     #[inline]
-    pub fn find<F>(&self, f: F) -> Option<Symbol<'elf>>
+    pub fn find<F>(&self, f: F) -> Option<Symbol<'_, 'elf>>
     where
-        F: FnMut(&Symbol<'_>) -> bool,
+        F: FnMut(&Symbol<'_, '_>) -> bool,
     {
         self.data
             .iter()
@@ -64,24 +64,24 @@ impl<'elf> SymbolTable<'elf> {
     }
 }
 
-pub struct Symbol<'elf> {
-    elf: &'elf Elf<'elf>,
+pub struct Symbol<'a, 'elf> {
+    elf: &'a Elf<'elf>,
     sym: &'elf Sym,
 }
 
-impl<'elf> Symbol<'elf> {
+impl<'elf> Symbol<'_, 'elf> {
     #[inline]
     pub fn name(&self) -> Option<&'elf str> {
         self.elf.string_table()?.get_string(self.name_index())
     }
 
     #[inline]
-    pub fn section(&self) -> Option<Section<'elf>> {
+    pub fn section(&self) -> Option<Section<'_, 'elf>> {
         self.elf.section(self.section_index)
     }
 }
 
-impl fmt::Debug for Symbol<'_> {
+impl fmt::Debug for Symbol<'_, '_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Symbol")
             .field("name", &self.name())
@@ -95,7 +95,7 @@ impl fmt::Debug for Symbol<'_> {
     }
 }
 
-impl core::ops::Deref for Symbol<'_> {
+impl core::ops::Deref for Symbol<'_, '_> {
     type Target = Sym;
 
     #[inline]

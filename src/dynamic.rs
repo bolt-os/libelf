@@ -31,13 +31,13 @@
 use crate::{assert_struct_size, Elf};
 use core::mem::size_of;
 
-pub struct DynamicTable<'elf> {
-    _elf: &'elf Elf<'elf>,
+pub struct DynamicTable<'a, 'elf> {
+    _elf: &'a Elf<'elf>,
     data: &'elf [Dyn],
 }
 
-impl<'elf> DynamicTable<'elf> {
-    pub fn new(_elf: &'elf Elf<'elf>, data: &'elf [u8]) -> DynamicTable<'elf> {
+impl<'a, 'elf> DynamicTable<'a, 'elf> {
+    pub fn new(_elf: &'a Elf<'elf>, data: &'elf [u8]) -> DynamicTable<'a, 'elf> {
         let len = data.len() / size_of::<Dyn>();
         let data = data.as_ptr().cast::<Dyn>();
         let mut dyntab = unsafe { core::slice::from_raw_parts(data, len) };
@@ -50,7 +50,9 @@ impl<'elf> DynamicTable<'elf> {
 
         Self { _elf, data: dyntab }
     }
+}
 
+impl<'elf> DynamicTable<'_, 'elf> {
     #[inline]
     pub fn table_raw(&self) -> &'elf [Dyn] {
         self.data

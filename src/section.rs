@@ -39,17 +39,19 @@ pub const SHN_ABS: u16 = 0xfff1;
 pub const SHN_COMMON: u16 = 0xfff2;
 pub const SHN_XINDEX: u16 = 0xffff;
 
-pub struct Section<'elf> {
-    elf: &'elf Elf<'elf>,
+pub struct Section<'a, 'elf> {
+    elf: &'a Elf<'elf>,
     hdr: &'elf SectionHeader,
 }
 
-impl<'elf> Section<'elf> {
+impl<'a, 'elf> Section<'a, 'elf> {
     #[inline]
-    pub(crate) fn new(elf: &'elf Elf<'elf>, hdr: &'elf SectionHeader) -> Section<'elf> {
+    pub(crate) fn new(elf: &'a Elf<'elf>, hdr: &'elf SectionHeader) -> Section<'a, 'elf> {
         Self { elf, hdr }
     }
+}
 
+impl<'elf> Section<'_, 'elf> {
     #[inline]
     pub fn file_data(&self) -> &'elf [u8] {
         &self.elf.data[self.file_offset()..][..self.size()]
@@ -82,7 +84,7 @@ impl<'elf> Section<'elf> {
     }
 }
 
-impl fmt::Debug for Section<'_> {
+impl fmt::Debug for Section<'_, '_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Section")
             .field("name", &self.name().unwrap_or(""))
@@ -91,7 +93,7 @@ impl fmt::Debug for Section<'_> {
     }
 }
 
-impl core::ops::Deref for Section<'_> {
+impl core::ops::Deref for Section<'_, '_> {
     type Target = SectionHeader;
 
     #[inline]

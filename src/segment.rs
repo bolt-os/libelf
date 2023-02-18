@@ -31,24 +31,26 @@
 use crate::{assert_struct_size, Elf};
 use core::fmt;
 
-pub struct Segment<'elf> {
-    elf: &'elf Elf<'elf>,
+pub struct Segment<'a, 'elf> {
+    elf: &'a Elf<'elf>,
     hdr: &'elf ProgramHeader,
 }
 
-impl<'elf> Segment<'elf> {
+impl<'a, 'elf> Segment<'a, 'elf> {
     #[inline]
-    pub(crate) fn new(elf: &'elf Elf<'elf>, hdr: &'elf ProgramHeader) -> Segment<'elf> {
+    pub(crate) fn new(elf: &'a Elf<'elf>, hdr: &'elf ProgramHeader) -> Segment<'a, 'elf> {
         Self { elf, hdr }
     }
+}
 
+impl<'elf> Segment<'_, 'elf> {
     #[inline]
     pub fn file_data(&self) -> &'elf [u8] {
         &self.elf.data[self.file_offset()..][..self.file_size()]
     }
 }
 
-impl fmt::Debug for Segment<'_> {
+impl fmt::Debug for Segment<'_, '_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Segment")
             .field("kind", &self.kind())
@@ -63,7 +65,7 @@ impl fmt::Debug for Segment<'_> {
     }
 }
 
-impl core::ops::Deref for Segment<'_> {
+impl core::ops::Deref for Segment<'_, '_> {
     type Target = ProgramHeader;
 
     fn deref(&self) -> &Self::Target {

@@ -153,7 +153,6 @@ impl<'elf> Elf<'elf> {
         Ok(Elf { data, ehdr })
     }
 
-    #[inline]
     fn get_slice(&self, offset: usize, size: usize) -> &'elf [u8] {
         &self.data[offset..][..size]
     }
@@ -166,12 +165,11 @@ impl<'elf> Elf<'elf> {
         core::slice::from_raw_parts(data, len)
     }
 
+    /// Return the section name string table, if it exists
     pub fn section_string_table(&self) -> Option<StringTable<'elf>> {
-        let shdr = self.section_header(self.ehdr.shdr_strtab_index as _)?;
-
-        Some(StringTable {
-            table: self.get_slice(shdr.file_offset(), shdr.size()),
-        })
+        Some(StringTable::new(
+            self.section(self.ehdr.shdr_strtab_index as _)?.file_data(),
+        ))
     }
 
     pub fn string_table(&self) -> Option<StringTable<'elf>> {
@@ -215,29 +213,30 @@ impl<'elf> Elf<'elf> {
     }
 
     #[inline]
-    pub fn section_header(&self, index: u32) -> Option<&SectionHeader> {
+    pub fn section_header(&self, index: u32) -> Option<&'elf SectionHeader> {
         self.section_headers().nth(index as usize)
     }
 
     #[inline]
-    pub fn sections(&self) -> impl Iterator<Item = Section<'_>> {
+    pub fn sections(&self) -> impl Iterator<Item = Section<'_, 'elf>> {
         self.section_headers().map(|hdr| Section::new(self, hdr))
     }
 
     #[inline]
-    pub fn segments(&self) -> impl Iterator<Item = Segment<'_>> {
+    pub fn segments(&self) -> impl Iterator<Item = Segment<'_, 'elf>> {
         self.program_headers().map(|hdr| Segment::new(self, hdr))
     }
 
-    pub fn program_headers(&self) -> impl Iterator<Item = &ProgramHeader> {
+    pub fn program_headers(&self) -> impl Iterator<Item = &'elf ProgramHeader> {
         let table = self.data[self.phdr_offset()..]
             [..self.phdr_num as usize * size_of::<ProgramHeader>()]
             .as_ptr()
             .cast::<ProgramHeader>();
         let mut index = 0;
+        let num_phdrs = self.ehdr.phdr_num as usize;
 
         core::iter::from_fn(move || {
-            if index < self.ehdr.phdr_num as usize {
+            if index < num_phdrs {
                 let hdr = unsafe { &*table.add(index) };
                 index += 1;
                 Some(hdr)
@@ -247,15 +246,16 @@ impl<'elf> Elf<'elf> {
         })
     }
 
-    pub fn section_headers(&self) -> impl Iterator<Item = &SectionHeader> {
-        let table = self.data[self.shdr_offset() as usize..]
+    pub fn section_headers(&self) -> impl Iterator<Item = &'elf SectionHeader> + '_ {
+        let table = self.data[self.shdr_offset()..]
             [..self.shdr_num as usize * size_of::<SectionHeader>()]
             .as_ptr()
             .cast::<SectionHeader>();
         let mut index = 0;
+        let num_shdrs = self.ehdr.shdr_num as usize;
 
         core::iter::from_fn(move || {
-            if index < self.ehdr.shdr_num as usize {
+            if index < num_shdrs {
                 let hdr = unsafe { &*table.add(index) };
                 index += 1;
                 Some(hdr)
@@ -266,17 +266,17 @@ impl<'elf> Elf<'elf> {
     }
 
     #[inline]
-    pub fn section(&self, index: u16) -> Option<Section<'_>> {
+    pub fn section(&self, index: u16) -> Option<Section<'_, 'elf>> {
         self.sections().nth(index as _)
     }
 
     /// Returns the section with the given `name`, or `None` if one can't be found.
     #[inline]
-    pub fn find_section(&self, name: &str) -> Option<Section<'_>> {
+    pub fn find_section(&self, name: &str) -> Option<Section<'_, 'elf>> {
         self.sections().find(|sect| sect.name() == Some(name))
     }
 
-    pub fn dynamic_table(&self) -> Option<DynamicTable<'_>> {
+    pub fn dynamic_table(&self) -> Option<DynamicTable<'_, 'elf>> {
         self.segments()
             .find(|sgmt| sgmt.kind() == SegmentKind::Dynamic)
             .map(|sgmt| {

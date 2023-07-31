@@ -44,7 +44,7 @@ impl<'a, 'elf> DynamicTable<'a, 'elf> {
 
         if !dyntab.is_empty() {
             let last = dyntab.len() - 1;
-            assert_eq!(dyntab[last].tag, 0);
+            assert_eq!(dyntab[last].tag, DynTag::NULL);
             dyntab = &dyntab[..last];
         }
 
@@ -62,23 +62,13 @@ impl<'elf> DynamicTable<'_, 'elf> {
 #[repr(C)]
 #[derive(Clone, Copy, Eq, Hash, PartialEq, PartialOrd)]
 pub struct Dyn {
-    tag: isize,
-    value: usize,
+    pub tag: DynTag,
+    pub value: usize,
 }
 
 assert_struct_size!(Dyn, 16);
 
 impl Dyn {
-    #[inline]
-    pub fn tag(&self) -> DynTag {
-        DynTag::from_raw(self.tag)
-    }
-
-    #[inline(always)]
-    pub fn value(&self) -> usize {
-        self.value
-    }
-
     #[inline]
     pub fn as_ptr<T>(&self) -> *const T {
         self.value as *const T
@@ -93,121 +83,78 @@ impl Dyn {
 impl core::fmt::Debug for Dyn {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("Dyn")
-            .field("tag", &self.tag())
+            .field("tag", &self.tag)
             .field("value", &format_args!("{:#018x}", self.value))
             .finish()
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub enum DynTag {
-    Null,
-    Needed,
-    PltRelSize,
-    PltGot,
-    Hash,
-    /// Address of the dynamic string table
-    Strtab,
-    /// Address of the dynamic symbol table
-    Symtab,
-    /// Address of [`Rela`](crate::reloc::Rela) type relocation table
-    Rela,
-    /// Size, in bytes, of the [`Rela`](DynTag::Rela) relocation table
-    RelaSize,
-    /// Size, in bytes, of each entry in the [`Rela`](DynTag::Rela) relocation table
-    RelaEnt,
-    /// Size, in bytes, of the dynamic string table
-    StrtabSize,
-    SymEnt,
-    Init,
-    Fini,
-    Soname,
-    Rpath,
-    Symbolic,
-    Rel,
-    RelSize,
-    RelEnt,
-    PltRel,
-    Debug,
-    TextRel,
-    JmpRel,
-    BindNow,
-    /// Pointer to an array of pointers to initialization functions
-    InitArray,
-    /// Pointer to an array of pointers to termination functions
-    FiniArray,
-    /// Size, in bytes, of the array of initialization function pointers ([`InitArray`])
-    ///
-    /// [`InitArray`]: DynTag::InitArray
-    InitArraySize,
-    /// Size, in bytes, of the array of termination function pointers ([`FiniArray`])
-    ///
-    /// [`FiniArray`]: DynTag::FiniArray
-    FiniArraySize,
-    Runpath,
-    Flags,
-    Encoding,
-    PreinitArray,
-    PreinitArraySize,
-    GnuHash,
-    RelaCount,
-    Flags1,
-    EnvSpecific(isize),
-    CpuSpecific(isize),
-    Unknown(isize),
-}
+#[repr(transparent)]
+#[derive(Clone, Copy, Default, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub struct DynTag(isize);
 
-impl DynTag {
-    #[inline]
-    pub const fn from_raw(tag: isize) -> Self {
-        use DynTag::*;
-
-        match tag {
-            0 => Null,
-            1 => Needed,
-            2 => PltRelSize,
-            3 => PltGot,
-            4 => Hash,
-            5 => Strtab,
-            6 => Symtab,
-            7 => Rela,
-            8 => RelaSize,
-            9 => RelaEnt,
-            10 => StrtabSize,
-            11 => SymEnt,
-            12 => Init,
-            13 => Fini,
-            14 => Soname,
-            15 => Rpath,
-            16 => Symbolic,
-            17 => Rel,
-            18 => RelSize,
-            19 => RelEnt,
-            20 => PltRel,
-            21 => Debug,
-            22 => TextRel,
-            23 => JmpRel,
-            24 => BindNow,
-            25 => InitArray,
-            26 => FiniArray,
-            27 => InitArraySize,
-            28 => FiniArraySize,
-            29 => Runpath,
-            30 => Flags,
-            32 => PreinitArray,
-            33 => PreinitArraySize,
-            0x6ffffef5 => GnuHash,
-            0x6ffffff9 => RelaCount,
-            0x6ffffffb => Flags1,
-            0x60000000..=0x6fffffff => EnvSpecific(tag),
-            0x70000000..=0x7fffffff => CpuSpecific(tag),
-            _ => Unknown(tag),
+macro_rules! dyn_tags {
+    ($($(#[$meta:meta])* const $name:ident = $val:expr;)*) => {
+        impl DynTag {
+            $($(#[$meta])*pub const $name: DynTag = Self($val);)*
         }
-    }
+
+        impl core::fmt::Debug for DynTag {
+            fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+                #[allow(unreachable_patterns)]
+                let name = match self.0 {
+                    $($val => stringify!($name),)*
+                    x => return write!(f, "DynTag({x:#x})"),
+                };
+                write!(f, "DynTag::{name}")
+            }
+        }
+    };
 }
 
-impl From<isize> for DynTag {
-    fn from(tag: isize) -> Self {
-        Self::from_raw(tag)
-    }
+dyn_tags! {
+    const NULL              = 0;
+    const NEEDED            = 1;
+    const PLTRELSZ          = 2;
+    const PLTGOT            = 3;
+    const HASH              = 4;
+    const STRTAB            = 5;
+    const SYMTAB            = 6;
+    const RELA              = 7;
+    const RELASZ            = 8;
+    const RELAENT           = 9;
+    const STRSZ             = 10;
+    const SYMENT            = 11;
+    const INIT              = 12;
+    const FINI              = 13;
+    const SONAME            = 14;
+    const RPATH             = 15;
+    const SYMBOLIC          = 16;
+    const REL               = 17;
+    const RELSZ             = 18;
+    const RELENT            = 19;
+    const PLTREL            = 20;
+    const DEBUG             = 21;
+    const TEXTREL           = 22;
+    const JMPREL            = 23;
+    const BIND_NOW          = 24;
+    const INIT_ARRAY        = 25;
+    const FINI_ARRAY        = 26;
+    const INIT_ARRAYSZ      = 27;
+    const FINI_ARRAYSZ      = 28;
+    const RUNPATH           = 29;
+    const FLAGS             = 30;
+    const PREINIT_ARRAY     = 32;
+    // This needs to come second so `PREINIT_ARRAY` is chosed for Debug output
+    const ENCODING          = 32;
+    const PREINIT_ARRAYSZ   = 33;
+    const GNU_HASH          = 0x6ffffef5;
+    const RELACOUNT         = 0x6ffffff9;
+    const RELCOUNT          = 0x6ffffffa;
+    const FLAGS_1           = 0x6ffffffb;
+
+    const LOOS          = 0x60000000;
+    const HIOS          = 0x6FFFFFFF;
+    const LOPROC        = 0x70000000;
+    const HIPROC        = 0x7FFFFFFF;
 }

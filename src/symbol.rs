@@ -52,15 +52,16 @@ impl<'elf> SymbolTable<'elf> {
         }
     }
 
+    pub fn symbols(&self) -> impl Iterator<Item = Symbol<'_, 'elf>> {
+        self.data.iter().map(|sym| Symbol { elf: self.elf, sym })
+    }
+
     #[inline]
     pub fn find<F>(&self, f: F) -> Option<Symbol<'_, 'elf>>
     where
         F: FnMut(&Symbol<'_, '_>) -> bool,
     {
-        self.data
-            .iter()
-            .map(|sym| Symbol { elf: self.elf, sym })
-            .find(f)
+        self.symbols().find(f)
     }
 }
 
